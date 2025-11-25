@@ -1,0 +1,7 @@
+{
+  "name": "PluvIA",
+  "description": "Interactive IoT water-level and rainfall monitoring system for Baixada Fluminense.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

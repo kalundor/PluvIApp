@@ -1,0 +1,302 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <title>PluvIA - Monitoramento Inteligente</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              // Dynamic Brand Colors via CSS Variables
+              brand: {
+                50:  'var(--brand-50)',
+                100: 'var(--brand-100)',
+                200: 'var(--brand-200)',
+                300: 'var(--brand-300)',
+                400: 'var(--brand-400)',
+                500: 'var(--brand-500)',
+                600: 'var(--brand-600)',
+                700: 'var(--brand-700)',
+                800: 'var(--brand-800)',
+                900: 'var(--brand-900)',
+                950: 'var(--brand-950)',
+                neon: 'var(--brand-neon)', // Primary Accent
+              },
+              dark: {
+                bg: '#05020A', 
+                card: '#0F0818',
+                border: '#2A1A3F'
+              },
+              status: {
+                safe: 'var(--status-safe)',
+                warning: 'var(--status-warning)',
+                danger: 'var(--status-danger)',
+                offline: 'var(--status-offline)'
+              }
+            },
+            fontFamily: {
+              sans: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+              display: ['Orbitron', 'sans-serif'], 
+              necosmic: ['Necosmic', 'Orbitron', 'sans-serif'],
+            },
+            animation: {
+              'wave-slow': 'wave 4s linear infinite',
+              'wave-fast': 'wave 2s linear infinite',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 3s ease-in-out infinite',
+              'glow': 'glow 2s ease-in-out infinite alternate',
+              'slide-in': 'slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+              'slide-out': 'slideOut 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+            },
+            keyframes: {
+              wave: {
+                '0%': { transform: 'translateX(0)' },
+                '100%': { transform: 'translateX(-50%)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              glow: {
+                '0%': { boxShadow: '0 0 5px var(--brand-neon), 0 0 10px var(--brand-neon)' },
+                '100%': { boxShadow: '0 0 20px var(--brand-neon), 0 0 30px var(--brand-neon)' },
+              },
+              slideIn: {
+                '0%': { transform: 'translateY(-20px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              },
+              slideOut: {
+                '0%': { transform: 'translateY(0)', opacity: '1' },
+                '100%': { transform: 'translateY(-20px)', opacity: '0' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/necosmic-2" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRSqBMY=" crossorigin=""/>
+
+    <style>
+      /* THEME ENGINE: Easy Brand Customization */
+      :root {
+        /* Base: Deep Purple/Pink (Default PluvIA) */
+        --brand-50: #fce4ec;
+        --brand-100: #f8bbd0;
+        --brand-200: #f48fb1;
+        --brand-300: #f06292;
+        --brand-400: #ec407a;
+        --brand-500: #e91e63;
+        --brand-600: #d81b60;
+        --brand-700: #c2185b;
+        --brand-800: #ad1457;
+        --brand-900: #880e4f;
+        --brand-950: #4a0072;
+        --brand-neon: #D500F9; /* Bright Purple Accent */
+
+        /* Light Mode Defaults */
+        --bg-glass: rgba(255, 255, 255, 0.75);
+        --border-glass: rgba(226, 232, 240, 0.6);
+        --shadow-glass: rgba(0, 0, 0, 0.05);
+        --bg-pattern: radial-gradient(#cbd5e1 1px, transparent 1px);
+
+        /* Status Colors - Light Mode (High Contrast) */
+        --status-safe: #16a34a;    /* Green 600 */
+        --status-warning: #ca8a04; /* Yellow 600 (Darker/Gold) for contrast on white */
+        --status-danger: #dc2626;  /* Red 600 */
+        --status-offline: #475569; /* Slate 600 */
+      }
+
+      /* Dark Mode Overrides */
+      .dark {
+        --bg-glass: rgba(15, 8, 24, 0.6);
+        --border-glass: rgba(255, 255, 255, 0.08);
+        --shadow-glass: rgba(0, 0, 0, 0.5);
+        --bg-pattern: radial-gradient(#2A1A3F 1px, transparent 1px);
+
+        /* Status Colors - Dark Mode (Neon/Bright) */
+        --status-safe: #00e676;    /* Neon Green */
+        --status-warning: #ffea00; /* Neon Yellow */
+        --status-danger: #ff1744;  /* Neon Red */
+        --status-offline: #607d8b; /* Blue Grey */
+      }
+
+      body {
+        font-family: 'Montserrat', sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      /* Background Texture */
+      .bg-dots {
+        background-image: var(--bg-pattern);
+        background-size: 24px 24px;
+        mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+      }
+
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Orbitron', sans-serif;
+      }
+      
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #94a3b8; 
+        border-radius: 99px;
+      }
+      .dark ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #2A1A3F;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--brand-neon); 
+      }
+      
+      /* Glassmorphism & Effects */
+      .glass-panel {
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--border-glass);
+        box-shadow: 0 4px 30px var(--shadow-glass);
+      }
+
+      .glass-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .dark .glass-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      
+      .neon-text {
+        text-shadow: 0 0 10px var(--brand-neon);
+      }
+      
+      .text-shadow-neon {
+        text-shadow: 0 0 20px currentColor;
+      }
+
+      /* Force Hide Mobile Elements on Desktop */
+      @media (min-width: 768px) {
+        .mobile-only {
+          display: none !important;
+        }
+      }
+
+      /* --- LEAFLET CUSTOMIZATIONS --- */
+      
+      /* Dark Mode Popups */
+      .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+        background: rgba(15, 8, 24, 0.95) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+      }
+      .leaflet-popup-content {
+        margin: 12px !important;
+        font-family: 'Montserrat', sans-serif !important;
+      }
+      .leaflet-container a.leaflet-popup-close-button {
+        color: #999 !important;
+      }
+
+      /* Custom Neon Marker Pulse */
+      .pluvia-marker-safe {
+        background-color: #00e676;
+        box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.7);
+        animation: pulse-green 2s infinite;
+      }
+      .pluvia-marker-warning {
+        background-color: #ffea00;
+        box-shadow: 0 0 0 0 rgba(255, 234, 0, 0.7);
+        animation: pulse-yellow 2s infinite;
+      }
+      .pluvia-marker-critical {
+        background-color: #ff1744;
+        box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.7);
+        animation: pulse-red 1.5s infinite;
+      }
+      .pluvia-marker-offline {
+        background-color: #607d8b;
+        border: 2px solid white;
+      }
+      
+      /* User Location Marker */
+      .user-location-pulse {
+        background-color: #4285F4;
+        border: 2px solid white;
+        border-radius: 50%;
+        box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7);
+        animation: pulse-blue 2s infinite;
+      }
+
+      @keyframes pulse-green {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 230, 118, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+      }
+      @keyframes pulse-yellow {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 234, 0, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 234, 0, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 234, 0, 0); }
+      }
+      @keyframes pulse-red {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(255, 23, 68, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
+      }
+      @keyframes pulse-blue {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(66, 133, 244, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(66, 133, 244, 0); }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.0",
+    "react-leaflet": "https://aistudiocdn.com/react-leaflet@^5.0.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-slate-50 dark:bg-[#05020A] text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden selection:bg-brand-neon selection:text-white">
+    <div id="root" class="h-full relative z-10"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
